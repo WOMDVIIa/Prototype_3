@@ -1,20 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
     public float jumpForce = 3.0f;
     public bool isOnGround = true;
     public bool jumpedOnce = false;
+    
     public ParticleSystem explosionParticle;
     public ParticleSystem dirtParticle;
     public AudioClip jumpSound;
     public AudioClip crashSound;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI highScoreText;
 
     private float score = 0;
     private float scoreTimeModifier = 10.0f;
     private float scoreDashModifier = 3.0f;
+    
     private SpawnManager spawnManagerScript;
     private MoveLeft playerDash;
     private Rigidbody playerRb;
@@ -28,8 +33,9 @@ public class PlayerController : MonoBehaviour
         playerAnim = GetComponent<Animator>();
         playerAudio = GetComponent<AudioSource>();
         spawnManagerScript = GameObject.Find("SpawnManager").GetComponent<SpawnManager>();
-        // do sprawdzenia
-        //playerDash = GameObject.Find("Background").GetComponent<MoveLeft>();
+        scoreText = GameObject.Find("Score Text").GetComponent<TextMeshProUGUI>();
+        highScoreText = GameObject.Find("HighScore Text").GetComponent<TextMeshProUGUI>();
+        scoreText.text = "Score: 0";
     }
 
     // Update is called once per frame
@@ -86,8 +92,9 @@ public class PlayerController : MonoBehaviour
             {
                 score += Time.deltaTime * scoreTimeModifier;
             }
-            string scoreOutput = "Score = " + Mathf.Round(score);
-            Debug.Log(scoreOutput);
+            scoreText.text = "Score: " + Mathf.Round(score);
+            //string scoreOutput = "Score = " + Mathf.Round(score);
+            //Debug.Log(scoreOutput);
         }
     }
 
@@ -109,12 +116,19 @@ public class PlayerController : MonoBehaviour
             {
                 explosionParticle.Play();
                 playerAudio.PlayOneShot(crashSound, 1.0f);
+                playerAnim.SetBool("Death_b", true);
+                dirtParticle.Stop();
+                spawnManagerScript.CallWaitingForRestart();
             }
             spawnManagerScript.gameOver = true;
-            string gameOverLog = "Game Over! You scored " + Mathf.Round(score) + " points!";
-            Debug.Log(gameOverLog);
-            playerAnim.SetBool("Death_b", true);
-            dirtParticle.Stop();
+            //playerAnim.SetBool("Death_b", true);
+            //dirtParticle.Stop();
+            //spawnManagerScript.CallWaitingForRestart();
+            if (score > spawnManagerScript.highScore)
+            {
+                spawnManagerScript.highScore = Mathf.Round(score);
+                highScoreText.text = "High Score: " + spawnManagerScript.highScore;
+            }
         }
     }
 }
